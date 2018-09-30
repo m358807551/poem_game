@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block script %}
+  <script type="text/javascript" charset="utf-8">
+    $(document).ready(function() {
+        var socket = io.connect();
+
+{#        socket.on('server_response', function(msg) {#}
+{#            var tbody="";#}
+{#            $.each(msg['user_list'], function(){#}
+{#                tbody += "<tr><td>0</td><td>" + this.username + "</td><td>" + this.is_ready + "</td></tr>"#}
+{#            });#}
+{#            for(var i = 0; i<=6-msg['user_list'].length;i++){#}
+{#                tbody += "<tr><td>0</td><td></td><td></td></tr>"#}
+{#            }#}
+{#            $('#tbody').html(tbody)#}
+{#        });#}
+
+        $("#submit").click(function(){
+            $("#input").val("");
+        });
+    });
+
+  </script>
+{% endblock %}
+
+{% block title %}competition{% endblock %}
+
+{% block content %}
+    <div class="section">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <br><br>
+            <h4>{{ question_list[0].question }}</h4>
+            <br><br>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <form role="form" target="frameFile">
+              <iframe name='frameFile' style='display: none;'>
+              </iframe>
+              <div class="form-group has-feedback">
+                <input id="input" class="form-control input-lg" placeholder="请输入拼音" type="text" autocomplete="off">
+              </div>
+              <button id="submit" type="submit" class="btn btn-block btn-default btn-lg">Submit</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Room{% endblock %}
+
+{% block script %}
+  <script type="text/javascript" charset="utf-8">
+    $(document).ready(function() {
+        var socket = io.connect();
+        {# ------------------------------------------------- #}
+        $("#game_li_choice_a").click(function () {
+           socket.emit('client_submit', {"answer": "A"});
+        });
+        $("#game_li_choice_b").click(function () {
+           socket.emit('client_submit', {"answer": "B"});
+        });
+        $("#game_li_choice_c").click(function () {
+           socket.emit('client_submit', {"answer": "C"});
+        });
+        $("#game_li_choice_d").click(function () {
+           socket.emit('client_submit', {"answer": "D"});
+        });
+
+        $("#game_btn_back_to_room").click(function(){
+            $("#game").hide();
+            $("#room").show();
+            $("#btn_ready").text("准备");
+            $("#game_row_question").show();
+            $("#game_row_question_choice_list").show();
+            $("#game_row_back_to_room").hide();
+            $("#game_row_congratulate").hide();
+            socket.emit('c_back_to_room', {});
+        });
+
+        $("#game_row_back_to_room").hide();
+        $("#game_row_congratulate").hide();
+
+        socket.on('s_match_is_over', function(msg) {
+            $("#congratulate").html("九州词客密如沙<br>唯有【 " + msg["winner_name"] + " 】甲天下");
+            $("#game_row_question").hide();
+            $("#game_row_question_choice_list").hide();
+            $("#game_row_back_to_room").show();
+            $("#game_row_congratulate").show();
+        });
+
+        socket.on('s_update_game_question', function(msg) {
+            var question_list = msg["question_list"]["question_list"];
+            var question_id = msg["question_list"]["question_id"];
+
+            $('#game_question_id').text("题目【 "+ (question_id+1) +" 】 共10题");
+            $('#game_li_choice_a').text("A、" + question_list[question_id]["choice_list"][0]);
+            $('#game_li_choice_b').text("B、" + question_list[question_id]["choice_list"][1]);
+            $('#game_li_choice_c').text("C、" + question_list[question_id]["choice_list"][2]);
+            $('#game_li_choice_d').text("D、" + question_list[question_id]["choice_list"][3]);
+            $('#game_question').html("<h4>" + question_list[question_id]["question"] + "</h4>");
+        });
+
+        socket.on('s_update_game_user_list', function(msg) {
+            var tbody = "<tr>";
+            $.each(msg["user_list"], function(){
+                tbody += "<td align='center'>" + this.score + "</td>";
+            });
+            tbody += "</tr><tr>";
+            $.each(msg["user_list"], function(){
+                tbody += "<td align='center'>" + this.username + "</td>";
+            });
+            tbody += "</tr><tr>";
+            $.each(msg["user_list"], function(){
+                if (this.is_submit_success === -1){
+                    tbody += "<td align='center'><span class='label label-warning'>等待提交</span></td>";
+                }else if (this.is_submit_success === 1){
+                    tbody += "<td align='center'><span class='label label-success'>回答正确</span></td>";
+                }else if (this.is_submit_success === 0){
+                    tbody += "<td align='center'><span class='label label-danger'>回答错误</span></td>";
+                }
+            });
+            tbody += "</tr>";
+            $('#score').html(tbody);
+        });
+
+        $("#game").hide();
+
+
+        socket.on('server_all_user_ready', function(msg) {
+            $("#game").show();
+            $("#room").hide();
+        });
+
+        socket.on('server_response', function(msg) {
+            var tbody="";
+            $.each(msg['user_list'], function(){
+                tbody += "<tr><td>0</td><td>" + this.username + "</td>";
+                if (this.is_ready === 1){
+                    tbody += "<td><span class='label label-success'>已准备</span></td></tr>"
+                }else {
+                    tbody += "<td><span class='label label-warning'>未准备</span></td></tr>"
+                }
+            });
+            for(var i = 0; i<=6-msg['user_list'].length;i++){
+                tbody += "<tr><td>0</td><td></td><td></td></tr>"
+            }
+            $('#tbody').html(tbody)
+        });
+
+        $("#btn_ready").click(function(){
+            if ($("#btn_ready").text() === "准备"){
+                $("#btn_ready").text("取消准备");
+                socket.emit('client_status_changed', {"is_ready": 1});
+            }else {
+                $("#btn_ready").text("准备");
+                socket.emit('client_status_changed', {"is_ready": 0});
+            }
+        });
+    });
+
+  </script>
+{% endblock %}
+
+{% block content %}
+
+  <div id="room" class="section">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>score</th>
+                  <th>user</th>
+                  <th>state</th>
+                </tr>
+              </thead>
+              <tbody id="tbody">
+                <tr><td>0</td><td></td><td></td><td></td></tr>
+                <tr><td>0</td><td></td><td></td><td></td></tr>
+                <tr><td>0</td><td></td><td></td><td></td></tr>
+                <tr><td>0</td><td></td><td></td><td></td></tr>
+                <tr><td>0</td><td></td><td></td><td></td></tr>
+                <tr><td>0</td><td></td><td></td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <p align="center">所有人都准备后会立即进入游戏</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <a class="btn btn-block btn-success btn-lg" id="btn_ready">准备</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <div id="game" class="section">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <table class="table">
+              <tbody id="score">
+                <tr>
+                  <td>1</td>
+                  <td>Mark</td>
+                  <td>Otto</td>
+                  <td>@mdo</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="row" id="game_row_question">
+          <div class="col-md-12">
+            <br>
+            <p id="game_question_id">题目1 共10题</p>
+            <h1 id="game_question">Game is starting</h1>
+            <br><br>
+          </div>
+        </div>
+        <div id="game_row_question_choice_list" class="row">
+          <div class="col-md-12">
+            <ul class="list-group text-center text-primary">
+              <li id="game_li_choice_a" class="list-group-item">A、Cras justo odio</li>
+              <li id="game_li_choice_b" class="list-group-item">B、Dapibus ac facilisis in</li>
+              <li id="game_li_choice_c" class="list-group-item">C、Morbi leo risus</li>
+              <li id="game_li_choice_d" class="list-group-item">D、Porta ac consectetur ac</li>
+            </ul>
+          </div>
+        </div>
+        <div id="game_row_congratulate" class="row">
+          <div class="col-md-12">
+            <br>
+              <h1 id="congratulate" align="center">多恩壮士密如沙<br>唯此一人甲天下</h1>
+            <br><br>
+          </div>
+        </div>
+        <div id="game_row_back_to_room" class="row">
+          <div class="col-md-12">
+            <a id="game_btn_back_to_room" class="btn btn-block btn-success">返回大厅</a>
+          </div>
+        </div>
+      </div>
+    </div>
+{% endblock %}
