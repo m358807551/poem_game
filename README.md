@@ -21,7 +21,7 @@
 
 ### 答题结束
 
-分数最高者获胜。
+分数最高者获胜，可以返回大厅重新准备。
 
 <img src="https://upload-images.jianshu.io/upload_images/9371058-b96fa9204bdfa743.jpeg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" width="300px" />
 
